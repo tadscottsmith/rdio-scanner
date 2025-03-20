@@ -334,7 +334,6 @@ func ParseMultipartContent(call *Call, p *multipart.Part, b []byte) {
 	case "sources":
 		var (
 			f     any
-			units *Units
 		)
 		if err := json.Unmarshal(b, &f); err == nil {
 			switch v := f.(type) {
@@ -356,12 +355,14 @@ func ParseMultipartContent(call *Call, p *multipart.Part, b []byte) {
 								src["src"] = uint(s)
 								switch t := v["tag"].(type) {
 								case string:
-									if units == nil {
-										units = NewUnits()
-									}
-									switch units := call.units.(type) {
-									case *Units:
-										units.Add(uint(s), t)
+									if len(t) > 0 {
+										if call.units == nil {
+											call.units = NewUnits()
+										}
+										switch v := call.units.(type) {
+										case *Units:
+											v.Add(uint(s), t)
+										}
 									}
 								}
 							}
@@ -370,7 +371,6 @@ func ParseMultipartContent(call *Call, p *multipart.Part, b []byte) {
 					sources = append(sources, src)
 				}
 				call.Sources = sources
-				call.units = units
 			}
 		}
 

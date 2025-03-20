@@ -3,3 +3,5 @@
 *.token
 /build
 /dist
+rdio-scanner
+rdio-scanner.db
