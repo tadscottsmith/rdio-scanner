@@ -26,8 +26,16 @@ import {
     RdioScannerEvent,
     RdioScannerLivefeedMap,
     RdioScannerSystem,
+    RdioScannerTalkgroup,
 } from '../rdio-scanner';
 import { RdioScannerService } from '../rdio-scanner.service';
+
+export type SelectSortKey = 'active' | 'system' | 'label' | 'name' | 'group' | 'tag';
+
+export interface SelectRow {
+    system: RdioScannerSystem;
+    talkgroup: RdioScannerTalkgroup;
+}
 
 @Component({
     selector: 'rdio-scanner-select',
@@ -45,6 +53,12 @@ export class RdioScannerSelectComponent implements OnDestroy {
     systems: RdioScannerSystem[] | undefined;
 
     tagsToggle: boolean | undefined;
+
+    search = '';
+
+    sortKey: SelectSortKey = 'system';
+
+    sortAsc = true;
 
     private eventSubscription = this.rdioScannerService.event.subscribe((event: RdioScannerEvent) => this.eventHandler(event));
 
@@ -70,6 +84,58 @@ export class RdioScannerSelectComponent implements OnDestroy {
         this.rdioScannerService.avoid(options);
     }
 
+    get rows(): SelectRow[] {
+        const terms = this.search.toLowerCase().split(/\s+/).filter((t) => t);
+
+        const rows: SelectRow[] = [];
+
+        (this.systems || []).forEach((system) => system.talkgroups.forEach((talkgroup) => {
+            const text = [system.label, talkgroup.id, talkgroup.label, talkgroup.name, talkgroup.group, talkgroup.tag]
+                .join(' ').toLowerCase();
+
+            if (terms.every((term) => text.includes(term))) rows.push({ system, talkgroup });
+        }));
+
+        const dir = this.sortAsc ? 1 : -1;
+
+        return rows.sort((a, b) => {
+            const cmp = this.sortValue(a, this.sortKey).localeCompare(this.sortValue(b, this.sortKey), undefined, { numeric: true, sensitivity: 'base' });
+
+            return cmp !== 0 ? cmp * dir : (a.system.id - b.system.id) || (a.talkgroup.id - b.talkgroup.id);
+        });
+    }
+
+    isActive(row: SelectRow): boolean {
+        return !!this.map[row.system.id]?.[row.talkgroup.id]?.active;
+    }
+
+    isBlinking(row: SelectRow): boolean {
+        return !!this.map[row.system.id]?.[row.talkgroup.id]?.minutes;
+    }
+
+    setAll(rows: SelectRow[], status: boolean): void {
+        this.rdioScannerService.beep(status ? RdioScannerBeepStyle.Activate : RdioScannerBeepStyle.Deactivate);
+
+        this.rdioScannerService.avoid({ items: rows, status });
+    }
+
+    setSort(key: SelectSortKey): void {
+        if (this.sortKey === key) {
+            this.sortAsc = !this.sortAsc;
+        } else {
+            this.sortKey = key;
+            this.sortAsc = true;
+        }
+    }
+
+    sortIndicator(key: SelectSortKey): string {
+        return this.sortKey !== key ? '' : this.sortAsc ? '▲' : '▼';
+    }
+
+    trackRow(_: number, row: SelectRow): string {
+        return `${row.system.id}:${row.talkgroup.id}`;
+    }
+
     ngOnDestroy(): void {
         this.eventSubscription.unsubscribe();
     }
@@ -90,5 +156,16 @@ export class RdioScannerSelectComponent implements OnDestroy {
         }
         if (event.categories) this.categories = event.categories;
         if (event.map) this.map = event.map;
+    }
+
+    private sortValue(row: SelectRow, key: SelectSortKey): string {
+        switch (key) {
+            case 'active': return this.isActive(row) ? '0' : '1';
+            case 'system': return row.system.label || '';
+            case 'label': return row.talkgroup.label || '';
+            case 'name': return row.talkgroup.name || '';
+            case 'group': return row.talkgroup.group || '';
+            case 'tag': return row.talkgroup.tag || '';
+        }
     }
 }

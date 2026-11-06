@@ -44,6 +44,91 @@
   }
 }
 
+.toolbar {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 8px;
+
+  .search {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    border-radius: 4px;
+    color: inherit;
+    flex: 1 1 200px;
+    font: inherit;
+    padding: 6px 8px;
+  }
+
+  .count {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 12px;
+  }
+
+  .rdio-button-mini {
+    margin-left: 0;
+    min-width: 80px;
+  }
+}
+
+.table-wrap {
+  max-height: calc(100vh - 200px);
+  overflow: auto;
+}
+
+.tg-table {
+  border-collapse: collapse;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 14px;
+  width: 100%;
+
+  th,
+  td {
+    padding: 6px 8px;
+    text-align: left;
+    white-space: nowrap;
+  }
+
+  th {
+    background: rgb(30, 30, 30);
+    position: sticky;
+    top: 0;
+    z-index: 1;
+
+    &.sortable {
+      cursor: pointer;
+    }
+  }
+
+  tbody tr {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    cursor: pointer;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    &.on {
+      color: #fff;
+    }
+
+    &.blink {
+      animation: blink 1s infinite;
+    }
+
+    &.empty {
+      cursor: default;
+    }
+  }
+}
+
+@keyframes blink {
+  50% {
+    opacity: 0.4;
+  }
+}
+
 .rdio-button {
   width: calc(25% - 4px);
 }
