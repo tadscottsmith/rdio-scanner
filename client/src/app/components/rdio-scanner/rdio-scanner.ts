@@ -22,6 +22,7 @@ import { Subscription } from "rxjs";
 export interface RdioScannerAvoidOptions {
     all?: boolean;
     call?: RdioScannerCall;
+    items?: { system: RdioScannerSystem; talkgroup: RdioScannerTalkgroup }[];
     minutes?: number;
     status?: boolean;
     system?: RdioScannerSystem;

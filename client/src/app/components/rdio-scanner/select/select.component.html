@@ -12,28 +12,50 @@
         </button>
     </div>
 </fieldset>
-<ng-container *ngFor="let system of systems">
-    <fieldset *ngIf="system.talkgroups.length" class="fieldset">
-        <legend>
-            {{ system.label }}
-        </legend>
-        <div>
-            <button *ngFor="let talkgroup of system.talkgroups" class="rdio-button"
-                [ngClass]="{ off: !(map[system.id] && map[system.id][talkgroup.id]).active, on: map[system.id] && map[system.id][talkgroup.id].active, blink: map[system.id][talkgroup.id].minutes }"
-                (click)="avoid({ system: system, talkgroup: talkgroup })">
-                {{ talkgroup.label }}
+<ng-container *ngIf="systems?.length; else none">
+    <ng-container *ngIf="rows as rows">
+        <div class="toolbar">
+            <input class="search" type="search" placeholder="Search system, id, label, name, group or tag"
+                [(ngModel)]="search" />
+            <span class="count">{{ rows.length }} shown</span>
+            <button class="rdio-button-mini all-off" (click)="setAll(rows, false)">
+                {{ search ? 'OFF shown' : 'OFF all' }}
             </button>
-            <ng-container *ngIf="system.talkgroups.length > 1">
-                <button class="rdio-button-mini all-off" (click)="avoid({ system: system, status: false })">
-                    OFF
-                </button>
-                <button class="rdio-button-mini all-on" (click)="avoid({ system: system, status: true })">
-                    ON
-                </button>
-            </ng-container>
+            <button class="rdio-button-mini all-on" (click)="setAll(rows, true)">
+                {{ search ? 'ON shown' : 'ON all' }}
+            </button>
         </div>
-    </fieldset>
+        <div class="table-wrap">
+            <table class="tg-table">
+                <thead>
+                    <tr>
+                        <th class="sortable" (click)="setSort('active')">On {{ sortIndicator('active') }}</th>
+                        <th class="sortable" (click)="setSort('system')">System {{ sortIndicator('system') }}</th>
+                        <th class="sortable" (click)="setSort('label')">Talkgroup {{ sortIndicator('label') }}</th>
+                        <th class="sortable" (click)="setSort('name')">Name {{ sortIndicator('name') }}</th>
+                        <th class="sortable" (click)="setSort('group')">Group {{ sortIndicator('group') }}</th>
+                        <th class="sortable" (click)="setSort('tag')">Tag {{ sortIndicator('tag') }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr *ngFor="let row of rows; trackBy: trackRow" [class.on]="isActive(row)"
+                        [class.blink]="isBlinking(row)"
+                        (click)="avoid({ system: row.system, talkgroup: row.talkgroup })">
+                        <td><input type="checkbox" [checked]="isActive(row)" (click)="$event.preventDefault()" /></td>
+                        <td>{{ row.system.label }}</td>
+                        <td>{{ row.talkgroup.label }}</td>
+                        <td>{{ row.talkgroup.name }}</td>
+                        <td>{{ row.talkgroup.group }}</td>
+                        <td>{{ row.talkgroup.tag }}</td>
+                    </tr>
+                    <tr *ngIf="!rows.length" class="empty">
+                        <td colspan="6">No matching talkgroup.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </ng-container>
 </ng-container>
-<ng-container *ngIf="systems?.length === 0">
+<ng-template #none>
     No talkgroup configured!
-</ng-container>
+</ng-template>

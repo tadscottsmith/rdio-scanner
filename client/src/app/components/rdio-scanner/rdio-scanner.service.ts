@@ -170,6 +170,15 @@ export class RdioScannerService implements OnDestroy {
                 });
             });
 
+        } else if (options.items) {
+            options.items.forEach(({ system, talkgroup }) => {
+                const lfm = this.livefeedMap[system.id]?.[talkgroup.id];
+                if (lfm) {
+                    clearTimer(lfm);
+                    lfm.active = typeof options.status === 'boolean' ? options.status : !lfm.active;
+                }
+            });
+
         } else if (options.call) {
             const lfm = this.livefeedMap[options.call.system][options.call.talkgroup];
             clearTimer(lfm);
