@@ -96,6 +96,9 @@ func (units *Units) FromMap(f []any) *Units {
 	return units
 }
 
+// Merge adds units that don't exist yet and overwrites the label of existing
+// units when the incoming label is non-empty and different. Returns true if
+// anything changed.
 func (u *Units) Merge(units *Units) bool {
 	merged := false
 
@@ -104,8 +107,23 @@ func (u *Units) Merge(units *Units) bool {
 		defer u.mutex.Unlock()
 
 		for _, v := range units.List {
-			if _, added := u.Add(v.Id, v.Label); added {
-				merged = added
+			label := strings.TrimSpace(v.Label)
+			found := false
+
+			for _, existing := range u.List {
+				if existing.Id == v.Id {
+					found = true
+					if len(label) > 0 && existing.Label != label {
+						existing.Label = label
+						merged = true
+					}
+					break
+				}
+			}
+
+			if !found {
+				u.List = append(u.List, &Unit{Id: v.Id, Label: label})
+				merged = true
 			}
 		}
 	}

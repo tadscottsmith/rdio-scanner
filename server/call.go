@@ -44,6 +44,7 @@ type Call struct {
 	talkgroupLabel any
 	talkgroupName  any
 	talkgroupTag   any
+	talkerAlias    any
 	units          any
 }
 
@@ -52,6 +53,51 @@ func NewCall() *Call {
 		Frequencies: []map[string]any{},
 		Patches:     []uint{},
 		Sources:     []map[string]any{},
+	}
+}
+
+// ApplyTalkerAlias turns a talkerAlias (as sent by SDRTrunk alongside a single
+// source radio ID) into a unit tag so it can be auto-populated like sources[].tag.
+// It runs after all multipart fields are parsed, since part order isn't guaranteed.
+func (call *Call) ApplyTalkerAlias() {
+	alias, ok := call.talkerAlias.(string)
+	if !ok || len(alias) == 0 {
+		return
+	}
+
+	var src uint
+	switch v := call.Source.(type) {
+	case int:
+		if v > 0 {
+			src = uint(v)
+		}
+	case uint:
+		src = v
+	case float64:
+		if v > 0 {
+			src = uint(v)
+		}
+	}
+	if src == 0 {
+		return
+	}
+
+	if call.units == nil {
+		call.units = NewUnits()
+	}
+	switch v := call.units.(type) {
+	case *Units:
+		if v == nil {
+			v = NewUnits()
+			call.units = v
+		}
+		for _, u := range v.List {
+			if u.Id == src {
+				u.Label = alias
+				return
+			}
+		}
+		v.Add(src, alias)
 	}
 }
 

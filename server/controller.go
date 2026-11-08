@@ -107,6 +107,8 @@ func (controller *Controller) IngestCall(call *Call) {
 		talkgroup  *Talkgroup
 	)
 
+	call.ApplyTalkerAlias()
+
 	logCall := func(call *Call, level string, message string) {
 		controller.Logs.LogEvent(level, fmt.Sprintf("newcall: system=%v talkgroup=%v file=%v %v", call.System, call.Talkgroup, call.AudioName, message))
 	}
@@ -249,7 +251,9 @@ func (controller *Controller) IngestCall(call *Call) {
 		switch v := call.units.(type) {
 		case *Units:
 			if v != nil {
-				populated = system.Units.Merge(v)
+				if system.Units.Merge(v) {
+					populated = true
+				}
 			}
 		}
 	}

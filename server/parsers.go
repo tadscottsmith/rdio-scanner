@@ -333,7 +333,7 @@ func ParseMultipartContent(call *Call, p *multipart.Part, b []byte) {
 
 	case "sources":
 		var (
-			f     any
+			f any
 		)
 		if err := json.Unmarshal(b, &f); err == nil {
 			switch v := f.(type) {
@@ -381,6 +381,11 @@ func ParseMultipartContent(call *Call, p *multipart.Part, b []byte) {
 
 	case "systemLabel":
 		call.systemLabel = string(b)
+
+	case "talkerAlias":
+		if s := strings.TrimSpace(string(b)); len(s) > 0 && s != "-" {
+			call.talkerAlias = s
+		}
 
 	case "talkgroup", "talkgroupId":
 		if i, err := strconv.Atoi(string(b)); err == nil && i > 0 {
